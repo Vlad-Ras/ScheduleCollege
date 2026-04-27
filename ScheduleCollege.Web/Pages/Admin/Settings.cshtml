@@ -1,0 +1,26 @@
+@page
+@model ScheduleCollege.Web.Pages.Admin.SettingsModel
+
+<h1>Настройки системы</h1>
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert success">@Model.Message</div>
+}
+
+<div class="card">
+    <h2>Видимость расписания для студента</h2>
+    <form method="post">
+        <div class="form-row">
+            <label>
+                <input type="radio" asp-for="StudentCanViewAllGroups" value="false" />
+                Студент видит только расписание своей группы
+            </label>
+            <label>
+                <input type="radio" asp-for="StudentCanViewAllGroups" value="true" />
+                Студент видит расписание всех групп
+            </label>
+        </div>
+        <button class="btn" type="submit">Сохранить</button>
+    </form>
+</div>

@@ -1,0 +1,52 @@
+@page
+@model ScheduleCollege.Web.Pages.Admin.ImportModel
+
+<h1>Импорт данных</h1>
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert success">@Model.Message</div>
+}
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert error">@Model.ErrorMessage</div>
+}
+
+<div class="card">
+    <h2>Загрузить файл</h2>
+    <form method="post" enctype="multipart/form-data" class="grid grid-3">
+        <select asp-for="ImportType">
+            <option value="Rooms">Аудитории</option>
+            <option value="Students">Студенты</option>
+            <option value="TimeSlots">Время пар</option>
+        </select>
+        <input asp-for="UploadFile" type="file" accept=".csv,.txt,.json" required />
+        <button class="btn" type="submit">Импортировать</button>
+    </form>
+    <p class="muted">Поддерживаются простые файлы CSV, TXT и JSON. Разделитель для CSV/TXT: точка с запятой, запятая или табуляция.</p>
+</div>
+
+<div class="grid grid-3">
+    <div class="card">
+        <h2>Аудитории</h2>
+        <p class="muted">Формат строк:</p>
+        <pre>number;capacity;equipment;format;onlineLink
+204;30;ПК, проектор;Очная;
+Онлайн;0;Видеоконференция;Онлайн;https://meet.example.edu</pre>
+    </div>
+    <div class="card">
+        <h2>Студенты</h2>
+        <p class="muted">Формат строк:</p>
+        <pre>login;fullName;groupCode;password
+ivanov;Иванов Иван;ИС-31;123456
+petrova;Петрова Анна;ИС-21;123456</pre>
+    </div>
+    <div class="card">
+        <h2>Время пар</h2>
+        <p class="muted">Формат строк:</p>
+        <pre>pairNumber;startTime;endTime
+1;09:00;10:30
+2;10:40;12:10
+3;12:40;14:10</pre>
+    </div>
+</div>

@@ -1,0 +1,7 @@
+# Замените schedulecollege.example.ru на свой домен.
+# Caddy сам выпустит HTTPS-сертификат, если домен указывает на ваш белый IP,
+# а порты 80 и 443 проброшены на компьютер/сервер с Caddy.
+
+schedulecollege.example.ru {
+    reverse_proxy 127.0.0.1:5000
+}

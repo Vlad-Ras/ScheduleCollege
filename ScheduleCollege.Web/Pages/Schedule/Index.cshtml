@@ -1,0 +1,145 @@
+@page
+@model ScheduleCollege.Web.Pages.Schedule.IndexModel
+
+<h1>Расписание</h1>
+
+<div class="card">
+    <form method="get" class="grid grid-4">
+        <div>
+            <label>Группа</label>
+            <select name="GroupId">
+                <option value="">Все</option>
+                @foreach (var g in Model.Groups)
+                {
+                    <option value="@g.Id" selected="@(Model.GroupId == g.Id)">@g.Code</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label>Преподаватель</label>
+            <select name="TeacherId">
+                <option value="">Все</option>
+                @foreach (var t in Model.Teachers)
+                {
+                    <option value="@t.Id" selected="@(Model.TeacherId == t.Id)">@t.FullName</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label>Аудитория</label>
+            <select name="RoomId">
+                <option value="">Все</option>
+                @foreach (var r in Model.Rooms)
+                {
+                    <option value="@r.Id" selected="@(Model.RoomId == r.Id)">
+                        @r.Number @(r.Format == "Онлайн" ? "(онлайн)" : "")
+                    </option>
+                }
+            </select>
+        </div>
+        <div>
+            <label>Дата</label>
+            <input type="date" name="StudyDate" value="@Model.StudyDate?.ToString("yyyy-MM-dd")" />
+        </div>
+        <button class="btn" type="submit">Показать</button>
+        <a class="btn secondary" asp-page="/Schedule/Index">Сбросить</a>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Календарь недели</h2>
+    <p class="muted">Неделя: @Model.WeekStart.ToString("dd.MM.yyyy") — @Model.WeekStart.AddDays(6).ToString("dd.MM.yyyy")</p>
+
+    <div class="calendar-wrap">
+        <table class="calendar-table">
+            <thead>
+                <tr>
+                    <th>Пара</th>
+                    @foreach (var day in Model.WeekDays)
+                    {
+                        <th>@ScheduleCollege.Web.Pages.Schedule.IndexModel.GetShortDayName(day)<br />@day.ToString("dd.MM")</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var pair in Model.PairNumbers)
+                {
+                    <tr>
+                        <th>@pair пара</th>
+                        @foreach (var day in Model.WeekDays)
+                        {
+                            var lessons = Model.GetCalendarEntries(day, pair);
+                            <td>
+                                @if (lessons.Count == 0)
+                                {
+                                    <span class="muted">—</span>
+                                }
+                                else
+                                {
+                                    foreach (var lesson in lessons)
+                                    {
+                                        <div class="lesson-card">
+                                            <b>@lesson.Group?.Code</b> — @lesson.Subject?.Title<br />
+                                            <span>@lesson.Teacher?.FullName</span><br />
+                                            <span>@Model.GetRoomText(lesson.Room)</span>
+                                        </div>
+                                    }
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Список занятий</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Дата</th>
+                <th>Пара</th>
+                <th>Группа</th>
+                <th>Дисциплина</th>
+                <th>Преподаватель</th>
+                <th>Аудитория</th>
+                <th>Статус</th>
+                @if (User.IsInRole("Admin") || User.IsInRole("Dispatcher")) { <th></th> }
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var item in Model.Entries)
+        {
+            <tr>
+                <td>@item.StudyDate.ToString("dd.MM.yyyy")</td>
+                <td>@item.TimeSlot?.PairNumber пара<br /><span class="muted">@item.TimeSlot?.StartTime - @item.TimeSlot?.EndTime</span></td>
+                <td>@item.Group?.Code</td>
+                <td>@item.Subject?.Title</td>
+                <td>@item.Teacher?.FullName</td>
+                <td>@Model.GetRoomText(item.Room)</td>
+                <td><span class="badge">@item.Status</span></td>
+                @if (User.IsInRole("Admin") || User.IsInRole("Dispatcher"))
+                {
+                    <td class="actions">
+                        <a class="btn small secondary" asp-page="/Schedule/Edit" asp-route-id="@item.Id">Изменить</a>
+                        <form method="post" asp-page-handler="Delete">
+                            <input type="hidden" name="id" value="@item.Id" />
+                            <button class="btn small danger" type="submit">Удалить</button>
+                        </form>
+                    </td>
+                }
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .calendar-wrap { overflow-x: auto; }
+    .calendar-table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+    .calendar-table th, .calendar-table td { border: 1px solid #dbe4ef; padding: 8px; vertical-align: top; }
+    .calendar-table th { background: #f1f5f9; }
+    .lesson-card { background: #eef6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 7px; margin-bottom: 6px; font-size: 13px; }
+</style>

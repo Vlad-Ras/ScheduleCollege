@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="ScheduleCollege.Web/ScheduleCollege.Web.csproj" />
+  <Project Path="ScheduleCollege.Desktop/ScheduleCollege.Desktop.csproj" />
+</Solution>

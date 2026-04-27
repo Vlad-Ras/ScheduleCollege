@@ -1,0 +1,36 @@
+@page
+@model ScheduleCollege.Web.Pages.Teacher.AvailabilityModel
+
+<h1>Мои занятые дни</h1>
+<p class="muted">Здесь преподаватель отмечает дни, когда не может вести пары.</p>
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert success">@Model.Message</div>
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert error">@Model.ErrorMessage</div>
+}
+
+<div class="card">
+    <h2>@Model.TeacherName</h2>
+    <form method="post">
+        <div class="checkbox-list">
+            @foreach (var day in Model.AllDays)
+            {
+                <label>
+                    <input type="checkbox" name="SelectedDays" value="@day" checked="@Model.SelectedDays.Contains(day)" />
+                    @day
+                </label>
+            }
+        </div>
+        <button class="btn" type="submit">Сохранить занятые дни</button>
+    </form>
+</div>
+
+<style>
+    .checkbox-list { display: grid; gap: 10px; margin-bottom: 16px; }
+    .checkbox-list label { display: flex; gap: 8px; align-items: center; }
+</style>

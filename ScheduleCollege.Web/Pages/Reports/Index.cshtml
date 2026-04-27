@@ -1,0 +1,239 @@
+@page
+@model ScheduleCollege.Web.Pages.Reports.IndexModel
+@{
+    ViewData["Title"] = "Отчёты";
+    var groupColumnCount = Model.ReportGroups.Count * 2;
+}
+
+<section class="page-title no-print">
+    <div>
+        <h1>Отчёты и экспорт</h1>
+        <p>Печатная форма расписания в виде недельной таблицы, как в учебной части.</p>
+    </div>
+    <div class="title-actions">
+        <button class="btn" type="button" onclick="window.print()">Печать</button>
+        <a class="btn" asp-page="/Reports/Index" asp-page-handler="Pdf"
+           asp-route-FromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+           asp-route-ToDate="@Model.ToDate?.ToString("yyyy-MM-dd")"
+           asp-route-GroupId="@Model.GroupId"
+           asp-route-RoomId="@Model.RoomId">Скачать PDF</a>
+        <a class="btn" asp-page="/Reports/Index" asp-page-handler="Png"
+           asp-route-FromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+           asp-route-ToDate="@Model.ToDate?.ToString("yyyy-MM-dd")"
+           asp-route-GroupId="@Model.GroupId"
+           asp-route-RoomId="@Model.RoomId">Скачать PNG</a>
+        <a class="btn" asp-page="/Reports/Index" asp-page-handler="Csv"
+           asp-route-FromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+           asp-route-ToDate="@Model.ToDate?.ToString("yyyy-MM-dd")"
+           asp-route-GroupId="@Model.GroupId"
+           asp-route-RoomId="@Model.RoomId">Скачать CSV</a>
+        <a class="btn secondary" asp-page="/Reports/Testing">План тестирования</a>
+    </div>
+</section>
+
+<form method="get" class="card filter-card no-print">
+    <div class="form-grid">
+        <label>
+            <span>С даты</span>
+            <input type="date" name="FromDate" value="@Model.FromDate?.ToString("yyyy-MM-dd")" />
+        </label>
+        <label>
+            <span>По дату</span>
+            <input type="date" name="ToDate" value="@Model.ToDate?.ToString("yyyy-MM-dd")" />
+        </label>
+        <label>
+            <span>Группа</span>
+            <select name="GroupId">
+                <option value="">Все группы</option>
+                @foreach (var group in Model.Groups)
+                {
+                    <option value="@group.Id" selected="@(Model.GroupId == group.Id)">@group.Code</option>
+                }
+            </select>
+        </label>
+        <label>
+            <span>Аудитория</span>
+            <select name="RoomId">
+                <option value="">Все аудитории</option>
+                @foreach (var room in Model.Rooms)
+                {
+                    <option value="@room.Id" selected="@(Model.RoomId == room.Id)">
+                        @room.Number @(room.Format == "Онлайн" ? "(онлайн)" : "")
+                    </option>
+                }
+            </select>
+        </label>
+    </div>
+    <div class="actions">
+        <button class="btn" type="submit">Сформировать отчёт</button>
+        <a class="btn secondary" asp-page="/Reports/Index">Сбросить</a>
+    </div>
+</form>
+
+<div class="stats-grid no-print">
+    <div class="stat-card"><span>Записей в отчёте</span><strong>@Model.Entries.Count</strong></div>
+    <div class="stat-card"><span>Обычные занятия</span><strong>@Model.LessonCount</strong></div>
+    <div class="stat-card"><span>Экзамены</span><strong>@Model.ExamCount</strong></div>
+    <div class="stat-card"><span>Зачёты</span><strong>@Model.CreditCount</strong></div>
+</div>
+
+<section class="print-header">
+    <h2>@Model.FromDate?.ToString("dd.MM") - @Model.ToDate?.ToString("dd.MM")</h2>
+    <p>Расписание учебных занятий</p>
+</section>
+
+<div class="card report-card">
+    @if (Model.ReportGroups.Count == 0)
+    {
+        <p class="empty">Нет групп для вывода расписания.</p>
+    }
+    else if (Model.TimeSlots.Count == 0)
+    {
+        <p class="empty">Нет настроенных пар. Добавьте пары в справочнике.</p>
+    }
+    else
+    {
+        <div class="schedule-grid-wrap">
+            <table class="schedule-grid-table">
+                <thead>
+                    <tr>
+                        <th class="date-title" colspan="3">@Model.FromDate?.ToString("dd.MM") - @Model.ToDate?.ToString("dd.MM")</th>
+                        @foreach (var group in Model.ReportGroups)
+                        {
+                            <th class="group-title" colspan="2">@group.Code</th>
+                        }
+                    </tr>
+                    <tr>
+                        <th>День недели</th>
+                        <th>Время</th>
+                        <th>№ пары</th>
+                        @foreach (var group in Model.ReportGroups)
+                        {
+                            <th>Учебный предмет</th>
+                            <th>аудит</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var date in Model.ReportDates)
+                    {
+                        if (ScheduleCollege.Web.Pages.Reports.IndexModel.IsWeekend(date))
+                        {
+                            <tr>
+                                <td class="day-cell weekend-day">@ScheduleCollege.Web.Pages.Reports.IndexModel.FormatDay(date)</td>
+                                <td class="weekend-cell" colspan="@(2 + groupColumnCount)">ВЫХОДНОЙ</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            var firstSlot = true;
+                            foreach (var slot in Model.TimeSlots)
+                            {
+                                <tr>
+                                    @if (firstSlot)
+                                    {
+                                        firstSlot = false;
+                                        <td class="day-cell" rowspan="@Model.TimeSlots.Count">@ScheduleCollege.Web.Pages.Reports.IndexModel.FormatDay(date)</td>
+                                    }
+                                    <td class="time-cell">@slot.StartTime<br />@slot.EndTime</td>
+                                    <td class="pair-cell">@ScheduleCollege.Web.Pages.Reports.IndexModel.FormatPair(slot.PairNumber)</td>
+                                    @foreach (var group in Model.ReportGroups)
+                                    {
+                                        var entry = Model.FindEntry(date, slot.PairNumber, group.Id);
+                                        <td class="subject-cell">@(entry?.Subject?.Title ?? "")</td>
+                                        <td class="room-cell">@ScheduleCollege.Web.Pages.Reports.IndexModel.GetRoomText(entry)</td>
+                                    }
+                                </tr>
+                            }
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<style>
+    .title-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .filter-card { margin-bottom: 16px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .stat-card { background: #ffffff; border: 1px solid #dbe4ef; border-radius: 14px; padding: 14px; }
+    .stat-card span { display: block; color: #64748b; font-size: 14px; }
+    .stat-card strong { display: block; margin-top: 6px; font-size: 26px; }
+    .print-header { display: none; }
+    .empty { margin: 0; color: #64748b; }
+
+    .schedule-grid-wrap {
+        overflow-x: auto;
+    }
+
+    .schedule-grid-table {
+        width: 100%;
+        min-width: 980px;
+        border-collapse: collapse;
+        background: #ffffff;
+        font-family: "Times New Roman", serif;
+    }
+
+    .schedule-grid-table th,
+    .schedule-grid-table td {
+        border: 1px solid #111;
+        padding: 4px 5px;
+        text-align: center;
+        vertical-align: middle;
+        font-size: 13px;
+        line-height: 1.15;
+    }
+
+    .schedule-grid-table th {
+        font-weight: 700;
+        background: #f3f4f6;
+    }
+
+    .date-title {
+        font-size: 18px !important;
+    }
+
+    .group-title {
+        font-size: 18px !important;
+    }
+
+    .day-cell {
+        width: 42px;
+        min-width: 42px;
+        max-width: 42px;
+        font-weight: 700;
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        letter-spacing: 2px;
+        white-space: nowrap;
+    }
+
+    .time-cell { width: 54px; white-space: nowrap; }
+    .pair-cell { width: 70px; white-space: nowrap; }
+    .subject-cell { min-width: 180px; }
+    .room-cell { width: 70px; white-space: normal; }
+    .weekend-day { height: 130px; }
+    .weekend-cell {
+        height: 130px;
+        font-size: 48px !important;
+        font-weight: 800;
+        letter-spacing: 2px;
+    }
+
+    @@media print {
+        body { background: white; }
+        .topbar, .no-print { display: none !important; }
+        .container { width: 100%; max-width: none; margin: 0; padding: 0; }
+        .card { box-shadow: none; border: none; padding: 0; }
+        .print-header { display: block; text-align: center; margin-bottom: 8px; }
+        .print-header h2 { margin: 0; font-size: 20px; }
+        .print-header p { margin: 2px 0 8px; }
+        .schedule-grid-wrap { overflow: visible; }
+        .schedule-grid-table { min-width: 0; width: 100%; }
+        .schedule-grid-table th, .schedule-grid-table td { padding: 3px; font-size: 9px; }
+        .date-title, .group-title { font-size: 13px !important; }
+        .subject-cell { min-width: 0; }
+        .weekend-cell { font-size: 34px !important; }
+    }
+</style>

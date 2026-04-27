@@ -1,0 +1,28 @@
+@page
+@model ScheduleCollege.Web.Pages.LoginModel
+
+<div class="card" style="max-width: 440px; margin: 60px auto;">
+    <h1>Вход в ScheduleCollege</h1>
+    <p class="muted">Введите логин и пароль.</p>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert error">@Model.ErrorMessage</div>
+    }
+
+    <form method="post">
+        <div class="form-row">
+            <label asp-for="Login"></label>
+            <input asp-for="Login" autofocus />
+        </div>
+        <div class="form-row">
+            <label asp-for="Password"></label>
+            <input asp-for="Password" type="password" />
+        </div>
+        <button class="btn" type="submit">Войти</button>
+    </form>
+
+    <p class="muted" style="margin-top:16px;">
+        Тест: admin / admin123
+    </p>
+</div>

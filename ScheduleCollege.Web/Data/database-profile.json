@@ -1,0 +1,7 @@
+{
+  "Provider": "SQLite",
+  "ConnectionString": "Data Source=schedulecollege.db",
+  "UpdatedAt": "2026-04-27T20:18:04.8886881+03:00",
+  "IsLocal": true,
+  "IsOnline": false
+}

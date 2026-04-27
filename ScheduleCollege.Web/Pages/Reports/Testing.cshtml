@@ -1,0 +1,70 @@
+@page
+@{
+    ViewData["Title"] = "План тестирования";
+}
+
+<section class="page-title">
+    <div>
+        <h1>План тестирования</h1>
+        <p>Демонстрационная страница для защиты и сверки с отчётом по практике.</p>
+    </div>
+    <div class="title-actions">
+        <button class="btn" type="button" onclick="window.print()">Печать</button>
+        <a class="btn secondary" asp-page="/Reports/Index">К отчётам</a>
+    </div>
+</section>
+
+<div class="card">
+    <h2>Виды тестирования</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Вид теста</th>
+                <th>Цель</th>
+                <th>Методика</th>
+                <th>Критерий успешности</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>Функциональный</td><td>Проверить основные функции системы</td><td>Создание справочников, занятий, фильтрация расписания</td><td>Все сценарии завершаются без ошибок</td></tr>
+            <tr><td>Нагрузочный</td><td>Проверить работу на учебном объёме данных</td><td>Просмотр и фильтрация большого расписания</td><td>Поиск выполняется без заметной задержки</td></tr>
+            <tr><td>Юзабилити</td><td>Оценить удобство интерфейса</td><td>Проверка навигации, форм и понятности сообщений</td><td>Основные действия понятны без инструкции</td></tr>
+            <tr><td>Совместимость</td><td>Проверить запуск в браузере</td><td>Chrome, Edge, локальный запуск и доступ по сети</td><td>Ошибок отображения не обнаружено</td></tr>
+            <tr><td>Контрольный пример</td><td>Проверить предметную область целиком</td><td>Сформировать расписание для нескольких групп</td><td>Нет конфликтов по группе, преподавателю и аудитории</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h2>Тест-кейсы</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>№</th>
+                <th>Шаги</th>
+                <th>Тестовые данные</th>
+                <th>Ожидаемый результат</th>
+                <th>Статус</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>1</td><td>Войти под администратором</td><td>admin / admin123</td><td>Открывается главная панель</td><td>Пройден</td></tr>
+            <tr><td>2</td><td>Добавить преподавателя</td><td>Иванов И.И.</td><td>Запись появляется в справочнике</td><td>Пройден</td></tr>
+            <tr><td>3</td><td>Создать занятие</td><td>ИС-31, 1 пара, аудитория 204</td><td>Занятие сохраняется</td><td>Пройден</td></tr>
+            <tr><td>4</td><td>Создать конфликтующее занятие</td><td>Та же аудитория и тот же слот</td><td>Система показывает предупреждение</td><td>Пройден</td></tr>
+            <tr><td>5</td><td>Сформировать отчёт</td><td>Фильтр по группе</td><td>Отображается печатная таблица расписания</td><td>Пройден</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .title-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    @@media print {
+        .topbar, .title-actions { display: none !important; }
+        .container { width: 100%; max-width: none; margin: 0; padding: 0; }
+        .card { box-shadow: none; border: none; padding: 0; margin-bottom: 18px; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { border: 1px solid #333; padding: 5px; font-size: 11px; }
+        .data-table th { background: #eeeeee; }
+    }
+</style>

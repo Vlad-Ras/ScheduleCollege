@@ -1,0 +1,131 @@
+@page
+@model ScheduleCollege.Web.Pages.Student.ScheduleModel
+
+<h1>Моё расписание</h1>
+@if (Model.CanViewAllGroups)
+{
+    <p class="muted">Режим просмотра: <b>все группы</b>. Неделя: @Model.WeekStart.ToString("dd.MM.yyyy") — @Model.WeekStart.AddDays(6).ToString("dd.MM.yyyy")</p>
+}
+else
+{
+    <p class="muted">Группа: <b>@Model.GroupCode</b>. Неделя: @Model.WeekStart.ToString("dd.MM.yyyy") — @Model.WeekStart.AddDays(6).ToString("dd.MM.yyyy")</p>
+}
+
+<div class="card">
+    <form method="get" class="grid grid-4">
+        <div>
+            <label>Дата внутри нужной недели</label>
+            <input type="date" name="WeekDate" value="@Model.WeekDate.ToString("yyyy-MM-dd")" />
+        </div>
+        @if (Model.CanViewAllGroups)
+        {
+            <div>
+                <label>Группа</label>
+                <select name="SelectedGroupCode">
+                    <option value="">Все группы</option>
+                    @foreach (var group in Model.Groups)
+                    {
+                        <option value="@group.Code" selected="@(Model.SelectedGroupCode == group.Code)">@group.Code</option>
+                    }
+                </select>
+            </div>
+        }
+        <button class="btn" type="submit">Показать неделю</button>
+    </form>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert warning">@Model.Message</div>
+}
+
+<div class="card">
+    <h2>Календарь недели</h2>
+    <div class="calendar-wrap">
+        <table class="calendar-table">
+            <thead>
+                <tr>
+                    <th>Пара</th>
+                    @foreach (var day in Model.WeekDays)
+                    {
+                        <th>@ScheduleCollege.Web.Pages.Student.ScheduleModel.GetShortDayName(day)<br />@day.ToString("dd.MM")</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var pair in Model.PairNumbers)
+            {
+                <tr>
+                    <th>@pair пара</th>
+                    @foreach (var day in Model.WeekDays)
+                    {
+                        var lessons = Model.GetLessons(day, pair);
+                        <td>
+                            @if (lessons.Count == 0)
+                            {
+                                <span class="muted">—</span>
+                            }
+                            else
+                            {
+                                foreach (var lesson in lessons)
+                                {
+                                    <div class="lesson-card">
+                                        @if (Model.CanViewAllGroups)
+                                        {
+                                            <b>@lesson.Group?.Code</b><br />
+                                        }
+                                        <b>@lesson.Subject?.Title</b><br />
+                                        <span>@lesson.TimeSlot?.StartTime - @lesson.TimeSlot?.EndTime</span><br />
+                                        <span>@Model.GetRoomText(lesson.Room)</span>
+                                    </div>
+                                }
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Список занятий</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Дата</th>
+                @if (Model.CanViewAllGroups)
+                {
+                    <th>Группа</th>
+                }
+                <th>Пара</th>
+                <th>Дисциплина</th>
+                <th>Аудитория</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var item in Model.Entries)
+        {
+            <tr>
+                <td>@item.StudyDate.ToString("dd.MM.yyyy")</td>
+                @if (Model.CanViewAllGroups)
+                {
+                    <td>@item.Group?.Code</td>
+                }
+                <td>@item.TimeSlot?.PairNumber<br /><span class="muted">@item.TimeSlot?.StartTime - @item.TimeSlot?.EndTime</span></td>
+                <td>@item.Subject?.Title</td>
+                <td>@Model.GetRoomText(item.Room)</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .calendar-wrap { overflow-x: auto; }
+    .calendar-table { width: 100%; border-collapse: collapse; min-width: 900px; }
+    .calendar-table th, .calendar-table td { border: 1px solid #dbe4ef; padding: 8px; vertical-align: top; }
+    .calendar-table th { background: #f1f5f9; }
+    .lesson-card { background: #eef6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 7px; margin-bottom: 6px; font-size: 13px; }
+</style>

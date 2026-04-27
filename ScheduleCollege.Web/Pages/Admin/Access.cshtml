@@ -1,0 +1,122 @@
+@page
+@model ScheduleCollege.Web.Pages.Admin.AccessModel
+
+<h1>Доступ к системе</h1>
+<p class="muted">
+    Здесь собраны готовые адреса и команды для локального, сетевого и внешнего доступа.
+    Ничего вручную искать в системе не нужно.
+</p>
+
+<div class="grid grid-3">
+    <div class="card">
+        <h2>На этом компьютере</h2>
+        <p>Основной адрес для запуска на серверном ПК:</p>
+        <div class="copy-row">
+            <code id="localUrl">@Model.LocalUrl</code>
+            <button class="btn small secondary" type="button" onclick="copyText('localUrl')">Копировать</button>
+        </div>
+        <p><a class="btn" href="@Model.LocalUrl" target="_blank">Открыть</a></p>
+    </div>
+
+    <div class="card">
+        <h2>В локальной сети</h2>
+        <p>Открывается с других компьютеров в этой же сети:</p>
+        <div class="copy-row">
+            <code id="networkUrl">@Model.NetworkUrl</code>
+            <button class="btn small secondary" type="button" onclick="copyText('networkUrl')">Копировать</button>
+        </div>
+        <p class="muted">Компьютер-сервер: @Model.ComputerName</p>
+    </div>
+
+    <div class="card">
+        <h2>Красивая локальная маска</h2>
+        <p>Желаемый адрес:</p>
+        <div class="copy-row">
+            <code id="maskUrl">@Model.LocalMaskUrl</code>
+            <button class="btn small secondary" type="button" onclick="copyText('maskUrl')">Копировать</button>
+        </div>
+        <p class="muted">Для работы маски нужно добавить запись hosts на нужных ПК.</p>
+    </div>
+</div>
+
+<div class="grid grid-2">
+    <div class="card">
+        <h2>Открыть доступ в локальной сети</h2>
+        <p>Запустите PowerShell от имени администратора и выполните команду:</p>
+        <pre><code id="firewallCommand">@Model.FirewallCommand</code></pre>
+        <button class="btn secondary" type="button" onclick="copyText('firewallCommand')">Копировать команду</button>
+    </div>
+
+    <div class="card">
+        <h2>Настроить schedulecollege.local</h2>
+        <p>В файл <code>C:\Windows\System32\drivers\etc\hosts</code> нужно добавить строку:</p>
+        <pre><code id="hostsLine">@Model.HostsLine</code></pre>
+        <button class="btn secondary" type="button" onclick="copyText('hostsLine')">Копировать строку</button>
+        <p class="muted">
+            Это нужно сделать на каждом компьютере, где требуется адрес
+            <code>schedulecollege.local</code>.
+        </p>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Внешний доступ по домену и белому IP</h2>
+    <p>
+        Если есть домен и белый IP, самый простой безопасный вариант:
+        домен → роутер → Caddy/Nginx/IIS → ScheduleCollege на <code>127.0.0.1:5000</code>.
+    </p>
+
+    <form method="get" class="inline-form">
+        <div class="form-row">
+            <label>Домен</label>
+            <input asp-for="ExternalDomain" placeholder="schedulecollege.example.ru" />
+        </div>
+        <button class="btn secondary" type="submit">Сформировать конфиг</button>
+    </form>
+
+    <div class="grid grid-2">
+        <div>
+            <h3>Caddyfile</h3>
+            <p class="muted">Самый простой вариант: Caddy сам выпускает HTTPS-сертификат.</p>
+            <pre><code id="caddyConfig">@Model.CaddyConfig</code></pre>
+            <button class="btn secondary" type="button" onclick="copyText('caddyConfig')">Копировать Caddyfile</button>
+        </div>
+
+        <div>
+            <h3>Nginx</h3>
+            <p class="muted">Вариант для сервера, где Nginx уже используется.</p>
+            <pre><code id="nginxConfig">@Model.NginxConfig</code></pre>
+            <button class="btn secondary" type="button" onclick="copyText('nginxConfig')">Копировать Nginx</button>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Порядок настройки внешнего доступа</h2>
+    <ol>
+        <li>В DNS домена создайте A-запись на белый IP.</li>
+        <li>На роутере пробросьте порты 80 и 443 на компьютер с программой.</li>
+        <li>Установите Caddy или другой reverse proxy.</li>
+        <li>Вставьте готовый Caddyfile из этой страницы.</li>
+        <li>Перезапустите Caddy и откройте внешний адрес.</li>
+    </ol>
+    <div class="alert warning">
+        Не рекомендуется открывать порт 5000 напрямую в интернет. Лучше держать ScheduleCollege на 127.0.0.1:5000,
+        а наружу отдавать только HTTPS через reverse proxy.
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function copyText(id) {
+            const element = document.getElementById(id);
+            if (!element) {
+                return;
+            }
+
+            navigator.clipboard.writeText(element.innerText).then(function () {
+                alert("Скопировано");
+            });
+        }
+    </script>
+}

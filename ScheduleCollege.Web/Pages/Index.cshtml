@@ -1,0 +1,58 @@
+@page
+@model ScheduleCollege.Web.Pages.IndexModel
+
+<h1>Панель управления</h1>
+<p class="muted">Информационная система колледжа для составления и публикации расписания.</p>
+
+<div class="grid grid-4">
+    <div class="card"><div class="stat">@Model.TeacherCount</div><div>Преподавателей</div></div>
+    <div class="card"><div class="stat">@Model.GroupCount</div><div>Групп</div></div>
+    <div class="card"><div class="stat">@Model.RoomCount</div><div>Аудиторий</div></div>
+    <div class="card"><div class="stat">@Model.ScheduleCount</div><div>Занятий</div></div>
+</div>
+
+<div class="card">
+    <h2>Быстрые действия</h2>
+    <div class="actions">
+        <a class="btn" asp-page="/Schedule/Index">Открыть расписание</a>
+        @if (User.IsInRole("Admin") || User.IsInRole("Dispatcher"))
+        {
+            <a class="btn" asp-page="/Schedule/Create">Добавить занятие</a>
+            <a class="btn secondary" asp-page="/Dictionaries/Index">Справочники</a>
+        }
+        @if (User.IsInRole("Admin"))
+        {
+            <a class="btn secondary" asp-page="/Admin/Database">База данных</a>
+            <a class="btn secondary" asp-page="/Admin/Access">Доступ</a>
+        }
+    </div>
+</div>
+
+<div class="card">
+    <h2>Ближайшие занятия</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Дата</th>
+                <th>Пара</th>
+                <th>Группа</th>
+                <th>Дисциплина</th>
+                <th>Преподаватель</th>
+                <th>Аудитория</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var item in Model.Upcoming)
+        {
+            <tr>
+                <td>@item.StudyDate.ToString("dd.MM.yyyy")</td>
+                <td>@item.TimeSlot?.PairNumber (@item.TimeSlot?.StartTime-@item.TimeSlot?.EndTime)</td>
+                <td>@item.Group?.Code</td>
+                <td>@item.Subject?.Title</td>
+                <td>@item.Teacher?.FullName</td>
+                <td>@Model.GetRoomText(item.Room)</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

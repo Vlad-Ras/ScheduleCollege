@@ -1,0 +1,21 @@
+@page
+@model ScheduleCollege.Web.Pages.Admin.AuditModel
+
+<h1>Журнал действий</h1>
+
+<div class="card">
+    <table>
+        <thead><tr><th>Дата</th><th>Пользователь</th><th>Действие</th><th>Подробности</th></tr></thead>
+        <tbody>
+        @foreach (var log in Model.Logs)
+        {
+            <tr>
+                <td>@log.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                <td>@log.UserLogin</td>
+                <td>@log.Action</td>
+                <td>@log.Details</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

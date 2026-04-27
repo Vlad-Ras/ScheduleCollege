@@ -1,0 +1,155 @@
+@page
+@model ScheduleCollege.Web.Pages.Admin.DatabaseModel
+
+<h1>База данных</h1>
+<p class="muted">Здесь можно переключить локальную SQLite-базу на PostgreSQL, MySQL или MariaDB и перенести данные без ручного SQL.</p>
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert success">@Model.Message</div>
+}
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert error">@Model.ErrorMessage</div>
+}
+
+<div class="grid grid-2">
+    <div class="card">
+        <h2>Текущая база</h2>
+        <p><b>Тип:</b> @Model.CurrentProvider</p>
+        <p><b>Строка подключения:</b></p>
+        <code>@Model.CurrentConnectionString</code>
+
+        <hr />
+        <p><b>Записей:</b></p>
+        <ul>
+            <li>Пользователи: @Model.UsersCount</li>
+            <li>Преподаватели: @Model.TeachersCount</li>
+            <li>Группы: @Model.GroupsCount</li>
+            <li>Дисциплины: @Model.SubjectsCount</li>
+            <li>Аудитории: @Model.RoomsCount</li>
+            <li>Расписание: @Model.ScheduleCount</li>
+        </ul>
+
+        <form method="post" asp-page-handler="Backup">
+            <button class="btn secondary" type="submit">Создать резервную копию</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Переключение базы</h2>
+        <form method="post">
+            <div class="form-row">
+                <label>Новый тип базы</label>
+                <select asp-for="TargetProvider" id="providerSelect">
+                    <option value="SQLite">Локальная SQLite</option>
+                    <option value="PostgreSQL">Онлайн PostgreSQL</option>
+                    <option value="MySQL">Онлайн MySQL</option>
+                    <option value="MariaDB">Онлайн MariaDB</option>
+                </select>
+            </div>
+
+            <div class="sqlite-fields">
+                <div class="form-row">
+                    <label>Файл SQLite</label>
+                    <input asp-for="SqliteFile" placeholder="schedulecollege_copy.db" />
+                </div>
+            </div>
+
+            <div class="online-fields">
+                <div class="grid grid-2">
+                    <div class="form-row">
+                        <label>Сервер</label>
+                        <input asp-for="Server" placeholder="db.example.ru" />
+                    </div>
+                    <div class="form-row">
+                        <label>Порт</label>
+                        <input asp-for="Port" type="number" />
+                    </div>
+                    <div class="form-row">
+                        <label>Имя базы данных</label>
+                        <input asp-for="DatabaseName" placeholder="schedulecollege" />
+                    </div>
+                    <div class="form-row">
+                        <label>Пользователь</label>
+                        <input asp-for="Username" />
+                    </div>
+                    <div class="form-row">
+                        <label>Пароль</label>
+                        <input asp-for="Password" type="password" />
+                    </div>
+                </div>
+
+                <p class="muted pg-help">Для PostgreSQL обычно используется порт 5432.</p>
+                <p class="muted mysql-help">Для MySQL и MariaDB обычно используется порт 3306.</p>
+            </div>
+
+            <details class="form-row">
+                <summary>Дополнительно: готовая строка подключения</summary>
+                <textarea asp-for="TargetConnectionString" placeholder="Можно оставить пустым, если поля выше заполнены."></textarea>
+                <p class="muted">
+                    Если заполнить это поле, программа использует его вместо ручных полей.
+                </p>
+            </details>
+
+            <div class="form-row">
+                <label>
+                    <input asp-for="ClearTarget" type="checkbox" />
+                    Очистить целевую базу перед переносом
+                </label>
+            </div>
+
+            <div class="actions">
+                <button class="btn secondary" type="submit" asp-page-handler="Test">Проверить подключение</button>
+                <button class="btn" type="submit" asp-page-handler="Transfer">Перенести данные и переключиться</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Как это работает</h2>
+    <ol>
+        <li>Программа создаёт JSON-backup текущей базы.</li>
+        <li>Проверяет целевую базу.</li>
+        <li>Создаёт таблицы, если их нет.</li>
+        <li>Обновляет структуру таблиц, если в старой базе не хватает новых колонок.</li>
+        <li>Переносит пользователей, справочники, расписание и журнал.</li>
+        <li>Только после успешного переноса переключает активную базу.</li>
+    </ol>
+</div>
+
+@section Scripts {
+<script>
+    const providerSelect = document.getElementById('providerSelect');
+    const sqliteFields = document.querySelectorAll('.sqlite-fields');
+    const onlineFields = document.querySelectorAll('.online-fields');
+    const pgHelp = document.querySelectorAll('.pg-help');
+    const mysqlHelp = document.querySelectorAll('.mysql-help');
+    const portInput = document.getElementById('Port');
+
+    function setVisible(items, visible) {
+        items.forEach(x => x.style.display = visible ? '' : 'none');
+    }
+
+    function updateDatabaseFields() {
+        const provider = providerSelect.value;
+
+        setVisible(sqliteFields, provider === 'SQLite');
+        setVisible(onlineFields, provider !== 'SQLite');
+        setVisible(pgHelp, provider === 'PostgreSQL');
+        setVisible(mysqlHelp, provider === 'MySQL' || provider === 'MariaDB');
+
+        if (provider === 'PostgreSQL' && (!portInput.value || portInput.value === '3306')) {
+            portInput.value = '5432';
+        }
+
+        if ((provider === 'MySQL' || provider === 'MariaDB') && (!portInput.value || portInput.value === '5432')) {
+            portInput.value = '3306';
+        }
+    }
+
+    providerSelect.addEventListener('change', updateDatabaseFields);
+    updateDatabaseFields();
+</script>
+}

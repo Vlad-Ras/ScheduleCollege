@@ -1,0 +1,103 @@
+@page
+@model ScheduleCollege.Web.Pages.Admin.UsersModel
+
+<h1>Пользователи</h1>
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert success">@Model.Message</div>
+}
+
+<div class="card">
+    <h2>Добавить пользователя</h2>
+    <form method="post" asp-page-handler="Add" class="grid grid-4">
+        <input name="Login" placeholder="Логин" required />
+        <input name="FullName" placeholder="ФИО" required />
+        <select name="Role" id="roleSelect">
+            <option value="Admin">Администратор</option>
+            <option value="Dispatcher">Диспетчер расписания</option>
+            <option value="Teacher">Преподаватель</option>
+            <option value="Student">Студент</option>
+        </select>
+        <select name="GroupCode" id="groupSelectBlock">
+            <option value="">Группа студента</option>
+            @foreach (var group in Model.Groups)
+            {
+                <option value="@group.Code">@group.Code</option>
+            }
+        </select>
+        <input name="Password" placeholder="Пароль" required />
+        <button class="btn" type="submit">Добавить</button>
+    </form>
+    <p class="muted">Для студента обязательно назначайте группу. Для преподавателя ФИО должно совпадать со справочником преподавателей.</p>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Логин</th>
+                <th>ФИО</th>
+                <th>Роль</th>
+                <th>Группа студента</th>
+                <th>Активен</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var user in Model.Users)
+        {
+            <tr>
+                <td>@user.Login</td>
+                <td>@user.FullName</td>
+                <td>@ScheduleCollege.Web.Pages.Admin.UsersModel.GetRoleText(user.Role)</td>
+                <td>
+                    @if (user.Role == "Student")
+                    {
+                        <form method="post" asp-page-handler="SetGroup" class="copy-row">
+                            <input type="hidden" name="id" value="@user.Id" />
+                            <select name="GroupCode">
+                                <option value="">Без группы</option>
+                                @foreach (var group in Model.Groups)
+                                {
+                                    <option value="@group.Code" selected="@(user.GroupCode == group.Code)">@group.Code</option>
+                                }
+                            </select>
+                            <button class="btn small" type="submit">Сохранить</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <span class="muted">—</span>
+                    }
+                </td>
+                <td>@(user.IsActive ? "Да" : "Нет")</td>
+                <td class="actions">
+                    <form method="post" asp-page-handler="Toggle">
+                        <input type="hidden" name="id" value="@user.Id" />
+                        <button class="btn small secondary" type="submit">Включить / выключить</button>
+                    </form>
+                    <form method="post" asp-page-handler="Delete">
+                        <input type="hidden" name="id" value="@user.Id" />
+                        <button class="btn small danger" type="submit">Удалить</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>
+    const roleSelect = document.getElementById('roleSelect');
+    const groupSelectBlock = document.getElementById('groupSelectBlock');
+
+    function updateGroupVisibility() {
+        groupSelectBlock.style.display = roleSelect.value === 'Student' ? '' : 'none';
+    }
+
+    roleSelect.addEventListener('change', updateGroupVisibility);
+    updateGroupVisibility();
+</script>
+}

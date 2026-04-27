@@ -1,0 +1,183 @@
+@page
+@model ScheduleCollege.Web.Pages.Dictionaries.IndexModel
+
+<h1>Справочники</h1>
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert success">@Model.Message</div>
+}
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert error">@Model.ErrorMessage</div>
+}
+
+<div class="card">
+    <h2>Время пар</h2>
+    <p class="muted">Нумерация пар фиксированная: от 1 до 6. Если первой или второй пары нет, просто не добавляйте занятие на этот номер пары.</p>
+    <form method="post" asp-page-handler="SavePairTimes">
+        <table>
+            <thead>
+                <tr>
+                    <th>Пара</th>
+                    <th>Начало</th>
+                    <th>Окончание</th>
+                </tr>
+            </thead>
+            <tbody>
+            @for (var pair = 1; pair <= 6; pair++)
+            {
+                var slot = Model.PairTimeSlots.FirstOrDefault(x => x.PairNumber == pair);
+                <tr>
+                    <td>
+                        <b>@pair пара</b>
+                        <input type="hidden" name="PairNumber" value="@pair" />
+                    </td>
+                    <td><input name="StartTime" value="@(slot?.StartTime ?? "")" placeholder="09:00" required /></td>
+                    <td><input name="EndTime" value="@(slot?.EndTime ?? "")" placeholder="10:30" required /></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        <button class="btn" type="submit">Сохранить время пар</button>
+    </form>
+</div>
+
+<div class="grid grid-2">
+    <div class="card">
+        <h2>Преподаватели</h2>
+        <form method="post" asp-page-handler="AddTeacher" class="grid grid-2">
+            <input name="FullName" placeholder="ФИО" required />
+            <input name="Department" placeholder="Отделение" />
+            <input name="UnavailableDays" placeholder="Недоступные дни: Понедельник, Среда" />
+            <button class="btn" type="submit">Добавить</button>
+        </form>
+        <table>
+            @foreach (var x in Model.Teachers)
+            {
+                <tr>
+                    <td>
+                        @x.FullName<br />
+                        <span class="muted">@x.Department</span>
+                        @if (!string.IsNullOrWhiteSpace(x.UnavailableDays))
+                        {
+                            <br /><span class="muted">Недоступен: @x.UnavailableDays</span>
+                        }
+                    </td>
+                    <td class="actions">
+                        <form method="post" asp-page-handler="DeleteTeacher">
+                            <input type="hidden" name="id" value="@x.Id" />
+                            <button class="btn small danger" type="submit">Удалить</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Группы</h2>
+        <form method="post" asp-page-handler="AddGroup" class="grid grid-3">
+            <input name="Code" placeholder="Код" required />
+            <input name="Course" type="number" placeholder="Курс" value="1" />
+            <input name="Specialty" placeholder="Специальность" />
+            <button class="btn" type="submit">Добавить</button>
+        </form>
+        <table>
+            @foreach (var x in Model.Groups)
+            {
+                <tr>
+                    <td>@x.Code<br /><span class="muted">@x.Course курс, @x.Specialty</span></td>
+                    <td>
+                        <form method="post" asp-page-handler="DeleteGroup">
+                            <input type="hidden" name="id" value="@x.Id" />
+                            <button class="btn small danger" type="submit">Удалить</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Дисциплины</h2>
+        <form method="post" asp-page-handler="AddSubject" class="grid grid-2">
+            <input name="Title" placeholder="Название" required />
+            <input name="Hours" type="number" placeholder="Часы" value="36" />
+            <button class="btn" type="submit">Добавить</button>
+        </form>
+        <table>
+            @foreach (var x in Model.Subjects)
+            {
+                <tr>
+                    <td>@x.Title<br /><span class="muted">@x.Hours ч.</span></td>
+                    <td>
+                        <form method="post" asp-page-handler="DeleteSubject">
+                            <input type="hidden" name="id" value="@x.Id" />
+                            <button class="btn small danger" type="submit">Удалить</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Аудитории</h2>
+        <form method="post" asp-page-handler="AddRoom" class="grid grid-3">
+            <input name="Number" placeholder="Номер или название: 204, 305-А, Актовый зал" required />
+            <input name="Capacity" type="number" placeholder="Мест" value="25" />
+            <input name="Equipment" placeholder="Оснащение" />
+            <select name="Format" class="room-format-select">
+                <option value="Очная">Очная</option>
+                <option value="Онлайн">Онлайн</option>
+            </select>
+            <input name="OnlineLink" class="room-online-link" placeholder="Ссылка для онлайн-занятия" style="display:none;" />
+            <button class="btn" type="submit">Добавить</button>
+        </form>
+        <table>
+            @foreach (var x in Model.Rooms)
+            {
+                <tr>
+                    <td>
+                        @x.Number<br />
+                        <span class="muted">@x.Format, @x.Capacity мест, @x.Equipment</span>
+                        @if (x.Format == "Онлайн" && !string.IsNullOrWhiteSpace(x.OnlineLink))
+                        {
+                            <br /><span class="muted">@x.OnlineLink</span>
+                        }
+                    </td>
+                    <td>
+                        <form method="post" asp-page-handler="DeleteRoom">
+                            <input type="hidden" name="id" value="@x.Id" />
+                            <button class="btn small danger" type="submit">Удалить</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function updateRoomOnlineFields() {
+        document.querySelectorAll('.room-format-select').forEach(select => {
+            const form = select.closest('form');
+            const onlineInput = form.querySelector('.room-online-link');
+
+            if (!onlineInput) {
+                return;
+            }
+
+            onlineInput.style.display = select.value === 'Онлайн' ? '' : 'none';
+        });
+    }
+
+    document.querySelectorAll('.room-format-select').forEach(select => {
+        select.addEventListener('change', updateRoomOnlineFields);
+    });
+
+    updateRoomOnlineFields();
+</script>
+}

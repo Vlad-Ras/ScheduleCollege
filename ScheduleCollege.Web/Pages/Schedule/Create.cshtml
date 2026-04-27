@@ -1,0 +1,85 @@
+@page
+@model ScheduleCollege.Web.Pages.Schedule.CreateModel
+
+<h1>Добавить занятие</h1>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert error">@Model.ErrorMessage</div>
+}
+@if (!string.IsNullOrWhiteSpace(Model.InfoMessage))
+{
+    <div class="alert success">@Model.InfoMessage</div>
+}
+
+<div class="card">
+    <form method="post">
+        <div class="grid grid-2">
+            <div class="form-row">
+                <label>Дата</label>
+                <input asp-for="Entry.StudyDate" type="date" id="studyDateInput" />
+            </div>
+            <div class="form-row">
+                <label>Пара</label>
+                <select asp-for="Entry.TimeSlotId" asp-items="Model.TimeSlotItems" id="timeSlotSelect"></select>
+                <span class="muted">Список пар зависит от учебного дня выбранной группы.</span>
+            </div>
+            <div class="form-row">
+                <label>Группа</label>
+                <select asp-for="Entry.GroupId" asp-items="Model.GroupItems" id="groupSelect"></select>
+            </div>
+            <div class="form-row">
+                <label>Преподаватель</label>
+                <select asp-for="Entry.TeacherId" asp-items="Model.TeacherItems"></select>
+                <span class="muted">В списке скрыты преподаватели, которые заняты или недоступны в выбранный день.</span>
+            </div>
+            <div class="form-row">
+                <label>Дисциплина</label>
+                <select asp-for="Entry.SubjectId" asp-items="Model.SubjectItems"></select>
+                <span class="muted">Для зачёта или экзамена добавьте пометку в названии дисциплины: например, "Математика (зачёт)".</span>
+            </div>
+            <div class="form-row">
+                <label>Аудитория</label>
+                <select asp-for="Entry.RoomId" asp-items="Model.RoomItems"></select>
+            </div>
+            <div class="form-row">
+                <label>Статус</label>
+                <select asp-for="Entry.Status">
+                    <option value="Опубликовано">Опубликовано</option>
+                    <option value="Черновик">Черновик</option>
+                    <option value="Замена">Замена</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label>Примечание</label>
+                <input asp-for="Entry.Note" />
+            </div>
+        </div>
+
+        <button class="btn" type="submit">Сохранить</button>
+        <a class="btn secondary" asp-page="/Schedule/Index">Отмена</a>
+    </form>
+</div>
+
+@section Scripts {
+<script>
+    const dateInput = document.getElementById('studyDateInput');
+    const slotSelect = document.getElementById('timeSlotSelect');
+    const groupSelect = document.getElementById('groupSelect');
+
+    function reloadTeachers() {
+        if (!dateInput.value) {
+            return;
+        }
+
+        const groupId = groupSelect ? groupSelect.value : '';
+        const slotId = slotSelect ? slotSelect.value : '';
+        const url = `/Schedule/Create?SelectedDate=${dateInput.value}&SelectedTimeSlotId=${slotId}&SelectedGroupId=${groupId}`;
+        window.location.href = url;
+    }
+
+    dateInput.addEventListener('change', reloadTeachers);
+    slotSelect.addEventListener('change', reloadTeachers);
+    groupSelect.addEventListener('change', reloadTeachers);
+</script>
+}

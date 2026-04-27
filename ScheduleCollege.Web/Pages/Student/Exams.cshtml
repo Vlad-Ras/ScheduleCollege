@@ -1,0 +1,53 @@
+@page
+@model ScheduleCollege.Web.Pages.Student.ExamsModel
+
+<h1>Ближайшие экзамены и зачёты</h1>
+@if (Model.CanViewAllGroups)
+{
+    <p class="muted">Режим просмотра: <b>все группы</b></p>
+}
+else
+{
+    <p class="muted">Группа: <b>@Model.GroupCode</b></p>
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert warning">@Model.Message</div>
+}
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Дата</th>
+                @if (Model.CanViewAllGroups)
+                {
+                    <th>Группа</th>
+                }
+                <th>Пара</th>
+                <th>Дисциплина</th>
+                <th>Аудитория</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var item in Model.Entries)
+        {
+            <tr>
+                <td>@item.StudyDate.ToString("dd.MM.yyyy")</td>
+                @if (Model.CanViewAllGroups)
+                {
+                    <td>@item.Group?.Code</td>
+                }
+                <td>@item.TimeSlot?.PairNumber<br /><span class="muted">@item.TimeSlot?.StartTime - @item.TimeSlot?.EndTime</span></td>
+                <td>@item.Subject?.Title</td>
+                <td>@Model.GetRoomText(item.Room)</td>
+            </tr>
+        }
+        @if (Model.Entries.Count == 0)
+        {
+            <tr><td colspan="@(Model.CanViewAllGroups ? 5 : 4)" class="muted">Ближайшие экзамены и зачёты не найдены.</td></tr>
+        }
+        </tbody>
+    </table>
+</div>

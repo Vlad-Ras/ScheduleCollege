@@ -1,0 +1,180 @@
+@page
+@model ScheduleCollege.Web.Pages.Schedule.StudyDaysModel
+
+<h1>Учебные дни групп</h1>
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert success">@Model.Message</div>
+}
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert error">@Model.ErrorMessage</div>
+}
+
+<div class="card">
+    <h2>Заполнить неделю</h2>
+    <p class="muted">Здесь задаётся, с какой пары и по какую пару учится каждая группа в конкретный день. Если настройки нет, группа считается доступной с 1 по 6 пару.</p>
+
+    <form method="get" class="grid grid-3">
+        <div class="form-row">
+            <label>Неделя</label>
+            <input type="date" name="WeekStartDate" value="@Model.WeekStart.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="form-row">
+            <label>&nbsp;</label>
+            <button class="btn" type="submit">Показать неделю</button>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Массовое заполнение</h2>
+    <form method="post">
+        <input type="hidden" asp-for="WeekStartInput" value="@Model.WeekStart.ToString("yyyy-MM-dd")" />
+
+        <div class="grid grid-2">
+            <div>
+                <h3>Группы</h3>
+                <label class="check-row">
+                    <input asp-for="ApplyAllGroups" />
+                    Применить ко всем группам
+                </label>
+
+                <div class="check-list">
+                    @foreach (var group in Model.Groups)
+                    {
+                        <label class="check-row">
+                            <input type="checkbox" name="GroupIds" value="@group.Id" />
+                            @group.Code
+                        </label>
+                    }
+                </div>
+            </div>
+
+            <div>
+                <h3>Быстрые шаблоны</h3>
+                <p class="muted">Можно быстро выбрать типовой режим, а потом поправить отдельные дни вручную.</p>
+                <div class="template-buttons">
+                    <button class="btn small secondary" type="button" onclick="fillTemplate(1, 6)">Полный день 1–6</button>
+                    <button class="btn small secondary" type="button" onclick="fillTemplate(1, 4)">Первая смена 1–4</button>
+                    <button class="btn small secondary" type="button" onclick="fillTemplate(3, 6)">Вторая смена 3–6</button>
+                    <button class="btn small secondary" type="button" onclick="fillTemplate(4, 6)">Поздняя смена 4–6</button>
+                </div>
+            </div>
+        </div>
+
+        <h3>Дни недели</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>День</th>
+                    <th>С какой пары</th>
+                    <th>По какую пару</th>
+                    <th>Выходной</th>
+                    <th>Комментарий</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (var i = 0; i < Model.Days.Count; i++)
+                {
+                    <tr>
+                        <td>
+                            <input type="hidden" name="Days[@i].StudyDate" value="@Model.Days[i].StudyDate.ToString("yyyy-MM-dd")" />
+                            <b>@ScheduleCollege.Web.Pages.Schedule.StudyDaysModel.GetDayName(Model.Days[i].StudyDate)</b><br />
+                            <span class="muted">@Model.Days[i].StudyDate.ToString("dd.MM.yyyy")</span>
+                        </td>
+                        <td>
+                            <select name="Days[@i].StartPairNumber" class="start-pair">
+                                @for (var pair = 1; pair <= 6; pair++)
+                                {
+                                    <option value="@pair" selected="@(Model.Days[i].StartPairNumber == pair)">@pair</option>
+                                }
+                            </select>
+                        </td>
+                        <td>
+                            <select name="Days[@i].EndPairNumber" class="end-pair">
+                                @for (var pair = 1; pair <= 6; pair++)
+                                {
+                                    <option value="@pair" selected="@(Model.Days[i].EndPairNumber == pair)">@pair</option>
+                                }
+                            </select>
+                        </td>
+                        <td>
+                            <input type="hidden" name="Days[@i].IsDayOff" value="false" />
+                            <input type="checkbox" name="Days[@i].IsDayOff" value="true" checked="@(Model.Days[i].IsDayOff)" />
+                        </td>
+                        <td>
+                            <input name="Days[@i].Comment" value="@Model.Days[i].Comment" />
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="title-actions">
+            <button class="btn" type="submit" asp-page-handler="SaveWeek">Сохранить неделю</button>
+            <button class="btn secondary" type="submit" asp-page-handler="CopyPreviousWeek">Скопировать с прошлой недели</button>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Текущие настройки недели</h2>
+    <p class="muted">Неделя: @Model.WeekStart.ToString("dd.MM.yyyy") — @Model.WeekStart.AddDays(6).ToString("dd.MM.yyyy")</p>
+
+    <div class="calendar-wrap">
+        <table class="calendar-table">
+            <thead>
+                <tr>
+                    <th>Группа</th>
+                    @for (var i = 0; i < 7; i++)
+                    {
+                        var date = Model.WeekStart.AddDays(i);
+                        <th>@ScheduleCollege.Web.Pages.Schedule.StudyDaysModel.GetDayName(date)<br />@date.ToString("dd.MM")</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var group in Model.Groups)
+                {
+                    <tr>
+                        <th>@group.Code</th>
+                        @for (var i = 0; i < 7; i++)
+                        {
+                            var date = Model.WeekStart.AddDays(i);
+                            var day = Model.FindDay(group.Id, date);
+                            <td>
+                                <b>@Model.GetDayText(day)</b>
+                                @if (!string.IsNullOrWhiteSpace(day?.Comment))
+                                {
+                                    <br /><span class="muted">@day.Comment</span>
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .calendar-wrap { overflow-x: auto; }
+    .calendar-table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+    .calendar-table th, .calendar-table td { border: 1px solid #dbe4ef; padding: 8px; vertical-align: top; }
+    .calendar-table th { background: #f1f5f9; }
+    .check-list { max-height: 230px; overflow: auto; border: 1px solid #dbe4ef; border-radius: 10px; padding: 8px; }
+    .check-row { display: block; margin: 6px 0; }
+    .template-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+    .title-actions { margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; }
+</style>
+
+@section Scripts {
+<script>
+    function fillTemplate(startPair, endPair) {
+        document.querySelectorAll('.start-pair').forEach(x => x.value = startPair);
+        document.querySelectorAll('.end-pair').forEach(x => x.value = endPair);
+    }
+</script>
+}

@@ -1,0 +1,13 @@
+Исправление этапа 8.1
+
+Что исправлено:
+1. Добавлен файл Data/SchemaUpdater.cs.
+2. В Program.cs после EnsureCreated() вызывается SchemaUpdater.Update(db).
+3. При запуске старой SQLite-базы автоматически добавляется колонка ScheduleEntries.Note.
+4. Обновлён ReportExportService.cs: убраны проблемные типы QuestPDF.Infrastructure.TableDescriptor.
+
+Зачем:
+После добавления поля Note старая база schedulecollege.db могла падать с ошибкой:
+SQLite Error 1: 'no such column: s.Note'.
+
+Теперь старую базу удалять не нужно: программа сама добавит недостающую колонку при запуске.
